@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+.pytest_cache/
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+results/*
+figures/*
+!results/.gitkeep
+!figures/.gitkeep
+*.pt
+*.pkl
+.DS_Store
