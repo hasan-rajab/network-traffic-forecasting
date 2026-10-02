@@ -1,0 +1,39 @@
+seed: 42
+data:
+  raw_dir: data/raw
+  processed_dir: data/processed
+  n_cells: 30
+  resample_freq: 1h
+  short_gap_limit: 2
+  target: internet
+  timezone: Europe/Rome
+forecast:
+  horizons: [1, 24]
+  folds: 4
+  seasonal_lags: [24, 168]
+  min_train_days: 21
+  ets_cells: 6
+  lightgbm:
+    n_estimators: 300
+    learning_rate: 0.05
+    num_leaves: 31
+    random_state: 42
+  deep:
+    epochs: 12
+    hidden_size: 32
+    batch_size: 256
+    learning_rate: 0.001
+anomaly:
+  seed: 42
+  residual_window: 168
+  magnitudes: [2, 3, 5]
+  types: [spike, drop, level_shift, daily_pattern_shift]
+capacity:
+  percentile: 0.95
+holidays:
+  - 2013-11-01
+  - 2013-12-07
+  - 2013-12-08
+  - 2013-12-25
+  - 2013-12-26
+  - 2014-01-01
