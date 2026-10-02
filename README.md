@@ -1,32 +1,103 @@
-# Network Traffic Forecasting and Anomaly Detection
+# Network Traffic Forecasting & Anomaly Detection
 
-Portfolio project framed as telecom capacity planning using the **Telecom Italia Milan Big Data Challenge** telecommunications activity dataset.
+A small, rigorous telecom ML portfolio project framed as **network capacity planning**: forecast per-cell load, detect unusual traffic behavior, and warn when forecast demand is above a capacity proxy.
 
-## Dataset
-Source: Harvard Dataverse DOI `10.7910/DVN/EGZHFV`, *Telecommunications - SMS, Call, Internet - MI* (Telecom Italia, 2015). The release contains 62 daily files from 2013-11-01 through 2014-01-01. Raw rows are tab-separated: square/cell id, Unix epoch milliseconds, country code, SMS-in, SMS-out, call-in, call-out, internet activity. Country-code rows are aggregated per cell/timestamp before modeling.
+## Problem and motivation
 
-License: **Open Database License (ODbL) 1.0**. Raw data is not committed to Git.
+Operators need short-horizon demand estimates for planning, operations, and congestion risk. This project treats Telecom Italia's historical Milan activity weights as a network-load proxy and tests three questions:
 
-## Reproducibility
-- Fixed seed: 42
-- Pinned dependencies in `requirements.txt`
-- One entry point: `make all`
-- Real data only. No synthetic substitute is used for forecasting. Synthetic anomalies are injected only into held-out real observations for detector evaluation and are explicitly labeled as such.
+1. How much can a global model improve on daily/weekly seasonal-naive forecasts?
+2. Can forecast residuals detect injected outage/spike/pattern events in held-out real traffic?
+3. Can +24h forecasts identify future load above a per-cell planning threshold?
 
-## Data placement
-Put the real Harvard files in `data/raw/` with original names such as `sms-call-internet-mi-2013-11-01.txt`.
+## Dataset and license
+
+Canonical dataset: **Telecommunications - SMS, Call, Internet - MI**, Telecom Italia Big Data Challenge, Harvard Dataverse DOI **10.7910/DVN/EGZHFV**. The source release is licensed under **ODbL 1.0**.
+
+Original raw schema is tab-separated with eight fields: cell/square ID, Unix epoch milliseconds, country code, SMS-in, SMS-out, call-in, call-out, and internet activity. Rows are at 10-minute resolution and multiple country-code rows can occur for a cell/timestamp; the loader therefore sums across country codes before modeling.
+
+### Transport note
+
+During the measured run, Harvard Dataverse returned DNS/403 failures from the available execution environments. The project therefore fetched the original daily raw-file names through the public Kaggle mirror `dkgmgo/telecom-italia-milan`. A byte-range validation confirmed the expected 8-column, 10-minute, country-code-level structure before execution. The mirror is a transport path; Harvard Dataverse remains the canonical source and ODbL license reference.
+
+The measured portfolio run uses **2013-11-01 through 2013-12-08 (38 days)** to keep CPU/runtime scope small while retaining weekly seasonality and the Dec 7–8 event window. Raw files are never committed to Git.
+
+## How to run
+
+```bash
+make setup
+make all
+```
+
+`make all` downloads/streams the real raw daily files, produces `data/processed/traffic.parquet`, runs EDA, forecasting, anomaly evaluation, capacity analysis, README result generation, and tests. No synthetic traffic dataset is used. Synthetic data appears **only as anomaly perturbations injected into held-out real observations** for detector evaluation.
+
+To launch the dashboard after the pipeline:
+
+```bash
+make dashboard
+```
 
 ## Methodology
-The loader aggregates across country codes, selects 30 cells reproducibly across low/medium/high traffic strata, resamples hourly, measures missingness, and forward-fills only short gaps. Forecast validation uses expanding-window rolling origin splits. Planned models are seasonal naive (24h/168h), ETS on a smaller cell subset, one global LightGBM model, and one global PyTorch LSTM. Anomaly evaluation uses fixed-seed injected spike, drop/outage, level-shift, and daily-pattern-shift events. Capacity is a proxy equal to each cell's training-period 95th percentile, **not real operator capacity**.
 
-## Limitations
-This is a portfolio analysis of historical activity weights, not operator traffic in Mbps/Gbps. There are no ground-truth anomaly labels, so quantitative anomaly metrics rely on synthetic events injected into held-out real data. The capacity threshold is an analytical proxy and must not be interpreted as engineered network capacity.
+### Data preparation
 
-## Future work
-Federated or decentralized training with cells treated as nodes; probabilistic forecast intervals; graph-based spatial models; calibration against real RAN/core capacity counters.
+- Aggregate country-code rows per cell and 10-minute timestamp.
+- Use internet activity as the main target; retain SMS/call activity as optional columns.
+- Select 30 cells with seed 42: 10 each from low, medium, and high first-week traffic strata.
+- Reindex every selected cell to the expected 10-minute grid, report missingness, and forward-fill only gaps of at most two 10-minute intervals.
+- Resample to hourly for the default experiment.
+
+### EDA and event checks
+
+The config explicitly records All Saints Day (Nov 1), Saint Ambrose Day in Milan (Dec 7), and Immaculate Conception (Dec 8). Real-date detector flags are reported only as qualitative evidence; the dataset has no incident labels.
+
+### Forecasting
+
+Four **expanding rolling-origin folds**, each with a 72-hour evaluation block. Direct +1h and +24h targets use a purge rule: every training target timestamp must be strictly earlier than the test fold start. Features use only information available at forecast time.
+
+Models:
+
+- 24h and 168h seasonal-naive baselines.
+- Additive Holt-Winters/ETS with 24h seasonality on six stratified cells (runtime-scoped baseline).
+- One global LightGBM across 30 cells using lags, rolling mean/std, hour, weekday, holiday flag, cell ID, and training-only cell statistics.
+- One global PyTorch Temporal CNN using a 168-hour sequence, training-only per-cell normalization, calendar channels, and cell embeddings.
+
+Metrics: MAE, RMSE, sMAPE, and MASE with a 24-hour seasonal scale. `results/forecast_metrics.csv` contains cell/fold-level metrics; `forecast_summary.csv` is the generated aggregate.
+
+### Anomaly detection
+
+No ground-truth anomalies exist. Fold 3 is used to inject validation anomalies and select thresholds; fold 4 is untouched until final test evaluation. Fixed-seed anomalies include spikes, drops/outages, level shifts, and daily-pattern shifts at 2σ, 3σ, and 5σ magnitudes.
+
+Detectors:
+
+- rolling robust residual z-score using median/MAD;
+- Isolation Forest on normalized residuals plus cyclical time features.
+
+The optional autoencoder is intentionally omitted to keep scope small; the PyTorch requirement is already exercised by the forecasting TCN.
+
+### Capacity planning
+
+Per-cell capacity is **assumed** to be the 95th percentile of load observed before each fold. This is not real operator capacity. The +24h LightGBM forecast is flagged when it exceeds that training-only proxy, then compared with actual proxy breaches.
 
 <!-- AUTO_RESULTS_START -->
-## Results
+## Measured results
 
-Results are generated only after real-data execution.
+Run `make all` to regenerate this section strictly from `results/*.csv`.
 <!-- AUTO_RESULTS_END -->
+
+## Limitations
+
+- Activity values are anonymized Telecom Italia activity weights, not Mbps/Gbps or RAN resource counters.
+- The selected 30 cells are a deterministic portfolio subset, not the whole Milan grid.
+- Anomaly F1 uses synthetic labels injected into real held-out observations; it does not measure real incident detection accuracy.
+- Capacity is a percentile proxy, not engineered capacity. Low breach recall is reported rather than hidden.
+- ETS is evaluated on only six cells and should not be ranked directly against full-cell model averages without that coverage caveat.
+- The public raw mirror preserves the expected source schema, but the execution environment could not independently checksum it against Harvard's files because Harvard access was blocked.
+
+## Future work
+
+- Probabilistic forecasts and calibrated prediction intervals.
+- Spatial graph features between neighboring cells.
+- Federated training with cells or base-station regions treated as nodes.
+- Real operator capacity counters and labeled incident/alarm streams.
+- Drift monitoring and periodic model retraining.
