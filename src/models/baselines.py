@@ -1,6 +1,11 @@
-import numpy as np
+from __future__ import annotations
 
-def seasonal_naive(series, horizon=1, lag=24):
-    if len(series) < lag+horizon: return np.full(horizon,np.nan)
-    base=np.asarray(series)[-lag:]
-    return np.resize(base,horizon)
+import pandas as pd
+
+
+def add_seasonal_naive_columns(df: pd.DataFrame, horizon: int) -> pd.DataFrame:
+    x = df.copy()
+    g = x.groupby("cell_id", sort=False)
+    x["seasonal_naive_24"] = g["internet"].shift(24 - horizon)
+    x["seasonal_naive_168"] = g["internet"].shift(168 - horizon)
+    return x
