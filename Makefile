@@ -15,5 +15,5 @@ evaluate:
 dashboard:
 	streamlit run app/dashboard.py
 test:
-	pytest -q
+	$(PYTHON) -m pytest -q
 all: data eda test evaluate
