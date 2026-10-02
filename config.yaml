@@ -1,39 +1,62 @@
 seed: 42
+source:
+  canonical_dataset: "Telecommunications - SMS, Call, Internet - MI"
+  canonical_doi: "10.7910/DVN/EGZHFV"
+  canonical_host: "Harvard Dataverse"
+  license: "ODbL 1.0"
+  transport_mirror: "dkgmgo/telecom-italia-milan"
+  mirror_note: "Raw daily files are fetched from a public Kaggle mirror because Harvard Dataverse returned 403/DNS failures in the execution environment. The downloaded files preserve the original 8-column, 10-minute, country-code-level schema."
 data:
-  raw_dir: data/raw
-  processed_dir: data/processed
+  start_date: "2013-11-01"
+  end_date: "2013-12-08"
+  raw_dir: "data/raw"
+  processed_dir: "data/processed"
   n_cells: 30
-  resample_freq: 1h
-  short_gap_limit: 2
-  target: internet
-  timezone: Europe/Rome
+  stratification_days: 7
+  resample_freq: "1h"
+  short_gap_limit_10min: 2
+  target: "internet"
+  timezone: "Europe/Rome"
+  chunksize: 500000
+  keep_raw: false
 forecast:
   horizons: [1, 24]
   folds: 4
+  test_hours_per_fold: 72
   seasonal_lags: [24, 168]
-  min_train_days: 21
-  ets_cells: 6
+  ets_cells_per_band: 2
   lightgbm:
     n_estimators: 300
     learning_rate: 0.05
     num_leaves: 31
-    random_state: 42
+    subsample: 0.9
+    colsample_bytree: 0.9
   deep:
-    epochs: 12
-    hidden_size: 32
-    batch_size: 256
+    model: "temporal_cnn"
+    sequence_length: 168
+    epochs: 4
+    channels: 12
+    cell_embedding_dim: 6
+    batch_size: 512
     learning_rate: 0.001
 anomaly:
-  seed: 42
+  validation_fold: 3
+  test_fold: 4
   residual_window: 168
-  magnitudes: [2, 3, 5]
-  types: [spike, drop, level_shift, daily_pattern_shift]
+  injection_seed_validation: 41
+  injection_seed_test: 42
+  magnitudes_std: [2, 3, 5]
+  types: ["spike", "drop", "level_shift", "daily_pattern_shift"]
+  replicates_per_type_magnitude: 2
 capacity:
   percentile: 0.95
-holidays:
-  - 2013-11-01
-  - 2013-12-07
-  - 2013-12-08
-  - 2013-12-25
-  - 2013-12-26
-  - 2014-01-01
+holiday_events:
+  - date: "2013-11-01"
+    name: "All Saints Day"
+    scope: "Italy"
+  - date: "2013-12-07"
+    name: "Saint Ambrose Day"
+    scope: "Milan"
+  - date: "2013-12-08"
+    name: "Immaculate Conception"
+    scope: "Italy"
