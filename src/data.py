@@ -43,14 +43,8 @@ def day_totals(day,cfg):
     return totals,n
 
 def aggregate_selected_day(day,cfg,cells):
-    acc=[]; n=0
-    for ch in stream_chunks(day,cfg):
-        n+=len(ch); ch=ch[ch.cell_id.isin(cells)].copy()
-        ch[ACT]=ch[ACT].fillna(0.0)
-        acc.append(ch.groupby(["cell_id","timestamp_ms"],as_index=False)[ACT].sum())
-    z=pd.concat(acc,ignore_index=True)
-    z=z.groupby(["cell_id","timestamp_ms"],as_index=False)[ACT].sum()
-    return z,n
+    from src.sql_analytics import aggregate_selected_chunks
+    return aggregate_selected_chunks(stream_chunks(day,cfg), cells)
 
 def select_cells(cfg):
     days=list(date_range(cfg["data"]["start_date"],cfg["data"]["end_date"]))[:int(cfg["data"]["stratification_days"])]
@@ -70,9 +64,9 @@ def select_cells(cfg):
 
 def build_processed(config_path="config.yaml"):
     cfg=load_config(config_path); outdir=Path(cfg["data"]["processed_dir"]); outdir.mkdir(parents=True,exist_ok=True); Path("results").mkdir(exist_ok=True)
-    cells,selection=select_cells(cfg); frames=[]; raw_rows=0; days=list(date_range(cfg["data"]["start_date"],cfg["data"]["end_date"]))
+    cells,selection=select_cells(cfg); frames=[]; raw_rows=0; selected_source_rows=0; days=list(date_range(cfg["data"]["start_date"],cfg["data"]["end_date"]))
     for d in days:
-        z,n=aggregate_selected_day(d,cfg,set(cells)); frames.append(z); raw_rows+=n; print(f"{d}: scanned {n:,} raw rows")
+        z,n=aggregate_selected_day(d,cfg,set(cells)); frames.append(z); raw_rows+=n; selected_source_rows+=z.attrs["selected_source_rows"]; print(f"{d}: scanned {n:,} raw rows")
     ten=pd.concat(frames,ignore_index=True).drop_duplicates(["cell_id","timestamp_ms"]).sort_values(["cell_id","timestamp_ms"])
     ten["timestamp"]=pd.to_datetime(ten.timestamp_ms,unit="ms",utc=True).dt.tz_convert(cfg["data"]["timezone"])
     filled=[]; miss=[]
@@ -90,9 +84,10 @@ def build_processed(config_path="config.yaml"):
     hourly=pd.concat(hourly,ignore_index=True).sort_values(["cell_id","timestamp"])
     full10.to_parquet(outdir/"traffic_10min_selected.parquet",index=False); hourly.to_parquet(outdir/"traffic.parquet",index=False)
     m=pd.DataFrame(miss); m.to_csv("results/missingness.csv",index=False); selection.to_csv("results/selected_cells.csv",index=False)
-    summary={"source_days":len(days),"raw_rows_scanned":int(raw_rows),"selected_cells":len(cells),"ten_min_rows":len(full10),"hourly_rows":len(hourly),"start":str(hourly.timestamp.min()),"end":str(hourly.timestamp.max()),"missing_pct_mean":float(m.missing_pct_before_fill.mean()),"missing_pct_max":float(m.missing_pct_before_fill.max()),"remaining_missing_after_fill":int(m.missing_after_short_ffill.sum())}
+    summary={"source_days":len(days),"raw_rows_scanned":int(raw_rows),"selected_source_rows":int(selected_source_rows),"aggregation_engine":"SQLite GROUP BY across country-code rows","selected_cells":len(cells),"ten_min_rows":len(full10),"hourly_rows":len(hourly),"start":str(hourly.timestamp.min()),"end":str(hourly.timestamp.max()),"missing_pct_mean":float(m.missing_pct_before_fill.mean()),"missing_pct_max":float(m.missing_pct_before_fill.max()),"remaining_missing_after_fill":int(m.missing_after_short_ffill.sum())}
     Path("results/data_quality.json").write_text(json.dumps(summary,indent=2),encoding="utf-8"); print(json.dumps(summary,indent=2)); return hourly
 
 def main():
     ap=argparse.ArgumentParser(); ap.add_argument("--config",default="config.yaml"); a=ap.parse_args(); build_processed(a.config)
 if __name__=="__main__": main()
+

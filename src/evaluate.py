@@ -45,14 +45,16 @@ def generate_portfolio_outputs(config_path: str = "config.yaml"):
 
     fs = pd.read_csv(root / "forecast_summary.csv"); am = pd.read_csv(root / "anomaly_metrics.csv"); cs = pd.read_csv(root / "capacity_summary.csv")
     lg = fs[fs.model == "lightgbm_global"].set_index("horizon_h")
-    best = am[am.breakdown == "global"].sort_values("f1", ascending=False).iloc[0]
+    best = am[(am.breakdown == "global") & (am.detector == "isolation_forest")].iloc[0]
     dq = json.loads((root / "data_quality.json").read_text(encoding="utf-8"))
     cv = pd.DataFrame([{
         "forecast_model": "lightgbm_global", "cells": int(lg.loc[1, "cells"]), "rolling_folds": int(cfg["forecast"]["folds"]),
         "mae_1h": lg.loc[1, "mae_mean"], "mae_improvement_1h_vs_naive24_pct": lg.loc[1, "mae_improvement_vs_naive24_pct"],
         "mae_24h": lg.loc[24, "mae_mean"], "mae_improvement_24h_vs_naive24_pct": lg.loc[24, "mae_improvement_vs_naive24_pct"],
         "anomaly_detector": best.detector, "anomaly_event_f1": best.f1, "anomaly_event_precision": best.precision,
-        "anomaly_event_recall": best.recall, "capacity_precision": cs.iloc[0].precision, "capacity_recall": cs.iloc[0].recall,
+        "anomaly_event_recall": best.recall, "anomaly_true_events": int(best.true_events),
+        "anomaly_tp_events": int(best.tp_events), "anomaly_fp_events": int(best.fp_events), "anomaly_fn_events": int(best.fn_events),
+        "selected_cells": dq["selected_cells"], "source_days": dq["source_days"], "hourly_model_rows": dq["hourly_rows"], "capacity_precision": cs.iloc[0].precision, "capacity_recall": cs.iloc[0].recall,
         "capacity_f1": cs.iloc[0].f1, "raw_rows_scanned": dq["raw_rows_scanned"],
     }])
     cv.to_csv(root / "cv_metrics.csv", index=False)
@@ -71,3 +73,4 @@ def _main_cli():
 
 if __name__ == "__main__":
     _main_cli()
+
