@@ -1,0 +1,40 @@
+{
+  "source_commit": "864a80ecf0db789436ca9429556e17781ec1183d",
+  "github_run_id": "37289212554",
+  "source_doi": "10.7910/DVN/EGZHFV",
+  "data_license": "ODbL-1.0",
+  "scope": "Derived 30-cell analytics and evaluation outputs; raw records excluded",
+  "validated": {
+    "hourly_rows": 27360,
+    "selected_cells": 30
+  },
+  "sha256": {
+    "data/processed/traffic.parquet": "a8171c1be18fe4a272fda5571443beaa378707fa7bd158394d8b935b41944c8d",
+    "data/processed/analytics.sqlite": "e6df5eccbd632a677d483f04568b1f0f43f563ba9fa4c6b4656d1f8abb037f93",
+    "results/anomaly_thresholds.csv": "47844be3386423d7d322ce6d65af43f11522c62ba6f135912c328c2d3ac4fd01",
+    "results/data_quality.json": "0e714e2a8a4efaca88d877c933acbb7efc334be012a4bf8e59b456a214ddf1f5",
+    "results/mart_cell_trends.csv": "ba6cbdbf960110b65e80d043988001bc29ce9d0c1f14cb8a9a3bb211cdc52797",
+    "results/cell_distribution.csv": "d98fa1e38adf92c8aaf4bcb78494199ba437440afa84078218f190aacee7d4a8",
+    "results/missingness.csv": "b73fe032a9c1df2cc525068c8bca24dcf59348ada1ca772a73b340a15a56b2c6",
+    "results/forecast_folds.csv": "3f5ac5098674d16abca1b9bbbd1127810fffcf2546190d487ead59cbedf6d943",
+    "results/anomaly_test_predictions.parquet": "0adc21b56ebfeecf2894f45529f5625f3ac95143d5c1ca812fac24cddc634a2c",
+    "results/capacity_summary.csv": "157305fb6b30b956374514e9b3b4e83cc6128be58b15074f11c7eb1eb769bc38",
+    "results/evidence_report.json": "31ba424182d2d363738ed54d242274febcb29a262193b3d65b905cdf87781fc1",
+    "results/selected_cells.csv": "dd3fb9aea6dea2f1f40abe85ba11e6c732f6d7db3dce1d5356c0ef340d7dc5e2",
+    "results/injected_anomaly_events_test.csv": "d4a8bf3cc76e3201891b579621ab7ad17907002f51aa28e8b6198b155e836819",
+    "results/forecast_predictions.parquet": "34a6236f17d6150950d8da51dfc551ae51d4345ec0b231b981eb70aed445b76c",
+    "results/daily_cell_activity.csv": "bda7b2f03d871879f3e428f321142bb625d90507348f1b842bb59e358746f6fe",
+    "results/cv_metrics.csv": "467812dbfbe92cb605ef78bf1780dae88fe8f93aaabbdf76a005cdf8aabaa75a",
+    "results/anomaly_metrics.csv": "5854a9d19600906f8fdaf3ba5001220e585205028344be82d0f9eb994e56b798",
+    "results/capacity_predictions.parquet": "61cf64e2bbc381e8c491d9a18ef06c5d7baa0f3000d8b424c783d04f827a1afd",
+    "results/mart_daily_load.csv": "43a7f6c41f6174923e712343d8b672ca2367f463e760f64ac60ad66b9394ccaa",
+    "results/sql_quality_checks.json": "0d5c79966ad626cc74e0f52ac229e4649008a2968e4379d6d52479410c041ded",
+    "results/hourly_seasonality.csv": "0ae8cd4e4d326d608c540a814f80a02b2d3b650840eaf3e918074f44e340d742",
+    "results/forecast_summary.csv": "250c101e0071441833dab2a286e6edace5fa85eb33e00a8a92866fa2d5386a1c",
+    "results/environment_versions.json": "7d730ece05fa92c6ed39687e347280dc70faa19ec03992c41727b9b444ddeec1",
+    "results/weekly_seasonality.csv": "96120033f1a1cb23f2befaca3b36ae73d5aa223b20a24fd19db40725920d25b2",
+    "results/capacity_metrics.csv": "a5c8a1fcb37d0687276c7160288f79bcc6b9ce41a62c19341eb0bd34418ceb6e",
+    "results/forecast_metrics.csv": "837681416461a20be94c729950559beae98e53aad2162d7d06d0b5ec58a85a1b",
+    "results/event_days.csv": "4db939aa29fdad96b8843c651f1509752a7663c25aab5e00478eb78f8b5924fd"
+  }
+}

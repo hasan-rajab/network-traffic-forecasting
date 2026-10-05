@@ -1,0 +1,92 @@
+{
+  "scope": {
+    "raw_rows_scanned": 200908858,
+    "selected_source_rows": 618755,
+    "selected_cells": 30,
+    "source_days": 38,
+    "ten_min_rows": 164160,
+    "hourly_rows": 27360,
+    "start": "2013-11-01 00:00:00+01:00",
+    "end": "2013-12-08 23:00:00+01:00"
+  },
+  "forecast_comparisons": [
+    {
+      "model": "lightgbm_global",
+      "baseline": "seasonal_naive_24",
+      "horizon_h": 1,
+      "paired_predictions": 8640,
+      "cells": 30,
+      "folds": 4,
+      "time_blocks": 12,
+      "block_hours": 24,
+      "bootstrap_resamples": 2000,
+      "seed": 42,
+      "model_mae": 45.40610984237258,
+      "baseline_mae": 57.97748568422406,
+      "mae_reduction_pct": 21.683202873477157,
+      "mae_difference": 12.571375841851477,
+      "mae_difference_ci95": [
+        9.24094625275565,
+        15.950652027811122
+      ],
+      "interval_excludes_zero_in_model_favour": true
+    },
+    {
+      "model": "lightgbm_global",
+      "baseline": "seasonal_naive_24",
+      "horizon_h": 24,
+      "paired_predictions": 8640,
+      "cells": 30,
+      "folds": 4,
+      "time_blocks": 12,
+      "block_hours": 24,
+      "bootstrap_resamples": 2000,
+      "seed": 42,
+      "model_mae": 55.54666543760018,
+      "baseline_mae": 57.97748568422406,
+      "mae_reduction_pct": 4.192696902834666,
+      "mae_difference": 2.430820246623874,
+      "mae_difference_ci95": [
+        -0.6937725455043262,
+        5.554537928679725
+      ],
+      "interval_excludes_zero_in_model_favour": false
+    }
+  ],
+  "anomaly_event_counts": [
+    {
+      "detector": "robust_z",
+      "tp_events": 17,
+      "fp_events": 14,
+      "fn_events": 7,
+      "true_events": 24,
+      "predicted_events": 31,
+      "precision": 0.5483870967741935,
+      "recall": 0.7083333333333334,
+      "f1": 0.6181818181818182,
+      "label_source": "synthetic perturbations in held-out real traffic",
+      "threshold_selection": "validation fold; test labels not used for threshold tuning"
+    },
+    {
+      "detector": "isolation_forest",
+      "tp_events": 20,
+      "fp_events": 16,
+      "fn_events": 4,
+      "true_events": 24,
+      "predicted_events": 36,
+      "precision": 0.5555555555555556,
+      "recall": 0.8333333333333334,
+      "f1": 0.6666666666666666,
+      "label_source": "synthetic perturbations in held-out real traffic",
+      "threshold_selection": "validation fold; test labels not used for threshold tuning"
+    }
+  ],
+  "notes": [
+    "Raw records scanned are distinct from selected country-code rows and hourly ML rows.",
+    "Paired intervals resample whole 24-hour blocks within folds and retain cross-cell dependence.",
+    "Four folds over a short window give conditional uncertainty, not production significance.",
+    "Report each horizon separately; a small +24h gain is not a large long-horizon advantage.",
+    "Capacity uses a training-period percentile proxy, not actual operator limits."
+  ],
+  "configured_anomaly_events": 24
+}

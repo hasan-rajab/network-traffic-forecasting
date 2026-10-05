@@ -41,11 +41,17 @@ make dashboard
 
 ### Data preparation
 
-- Aggregate country-code rows per cell and 10-minute timestamp.
+- Aggregate selected country-code rows per cell and 10-minute timestamp using SQLite SQL across streaming chunk boundaries.
 - Use internet activity as the main target; retain SMS/call activity as optional columns.
 - Select 30 cells with seed 42: 10 each from low, medium, and high first-week traffic strata.
 - Reindex every selected cell to the expected 10-minute grid, report missingness, and forward-fill only gaps of at most two 10-minute intervals.
 - Resample to hourly for the default experiment.
+
+### SQL analytics engineering and statistical evidence
+
+Selected raw country-code rows are now aggregated in **SQLite SQL**, with source scans, retained rows and modelling rows tracked separately. A tested SQLite warehouse exposes daily load/coverage by stratum and prior-only rolling trends using CTEs, joins and time-based window functions. Run `make analytics` after data preparation.
+
+`make evidence` produces paired +1h/+24h forecast comparisons with 24-hour block-bootstrap intervals, exact coverage checks, and anomaly **true/predicted event counts plus TP/FP/FN**. `make all` runs both additions automatically. Counts are computed from run artifacts; historical CV percentages are not hard-coded. Read [the evidence guide](docs/ANALYTICS_EVIDENCE.md) for scope, methodology, reproducibility and limitations.
 
 ### EDA and event checks
 
@@ -101,3 +107,17 @@ Run `make all` to regenerate this section strictly from `results/*.csv`.
 - Federated training with cells or base-station regions treated as nodes.
 - Real operator capacity counters and labeled incident/alarm streams.
 - Drift monitoring and periodic model retraining.
+
+
+## Production deployment
+
+Deployment configuration and launch requirements are documented in [docs/PRODUCTION.md](docs/PRODUCTION.md). The deployment has not yet been verified live.
+# Interactive public demo
+
+[Explore Telecom analytics](https://telecom-analytics-production.up.railway.app) ·
+[Portfolio](https://nexusmind-production-3da9.up.railway.app/portfolio)
+
+Choose a network cell and +1h/+24h forecast, filter traffic segments, inspect SQL, download aggregate
+data and adjust the hypothetical capacity threshold. The page distinguishes the 200M+ raw source
+scans from the 27,360 hourly modelling rows and shows injected-event denominators and uncertainty.
+Capacity thresholds are training-percentile proxies; scenarios do not establish real operator capacity.

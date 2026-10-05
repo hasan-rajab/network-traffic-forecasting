@@ -1,0 +1,11 @@
+{
+  "python": "3.12.14",
+  "pandas": "2.2.3",
+  "numpy": "2.3.5",
+  "scikit-learn": "1.6.1",
+  "statsmodels": "0.14.4",
+  "lightgbm": "4.5.0",
+  "torch": "2.5.1+cpu",
+  "pyarrow": "18.1.0",
+  "matplotlib": "3.10.8"
+}

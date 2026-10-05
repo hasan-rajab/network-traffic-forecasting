@@ -1,0 +1,14 @@
+{
+  "source_days": 38,
+  "raw_rows_scanned": 200908858,
+  "selected_source_rows": 618755,
+  "aggregation_engine": "SQLite GROUP BY across country-code rows",
+  "selected_cells": 30,
+  "ten_min_rows": 164160,
+  "hourly_rows": 27360,
+  "start": "2013-11-01 00:00:00+01:00",
+  "end": "2013-12-08 23:00:00+01:00",
+  "missing_pct_mean": 0.0,
+  "missing_pct_max": 0.0,
+  "remaining_missing_after_fill": 0
+}

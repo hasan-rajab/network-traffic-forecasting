@@ -1,22 +1,55 @@
-name: bootstrap-project
+name: Regenerate real Telecom production data
 on:
   workflow_dispatch:
 permissions:
   contents: write
+concurrency:
+  group: telecom-production-data
+  cancel-in-progress: false
+env:
+  OMP_NUM_THREADS: '1'
+  OPENBLAS_NUM_THREADS: '1'
+  MKL_NUM_THREADS: '1'
+  PYTHONUNBUFFERED: '1'
 jobs:
-  apply:
+  regenerate:
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     steps:
+      - name: Restrict publishing to the deployment branch
+        run: test "$GITHUB_REF" = 'refs/heads/codex/data-analytics-evidence-2026-10-05'
       - uses: actions/checkout@v4
-      - name: Apply packaged project
+        with:
+          ref: ${{ github.ref }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install CPU pipeline dependencies
         run: |
-          base64 -d bootstrap.b64 > /tmp/project.zip
-          unzip -o /tmp/project.zip -d .
-          rm -f bootstrap.b64 .github/workflows/bootstrap.yml
-      - name: Commit project
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch==2.5.1
+          python -m pip install -r requirements.txt
+      - name: Rebuild from real source traffic and evaluate
+        run: make all
+      - name: Validate and package the derived data
+        run: python scripts/package_artifacts.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: telecom-data-workspace
+          path: |
+            deployment/artifacts
+            data/processed/*.parquet
+            data/processed/analytics.sqlite
+            results/*.json
+            results/*.csv
+            results/*.parquet
+          retention-days: 30
+      - name: Publish validated artifacts on the deployment branch
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "Implement reproducible real-data pipeline"
-          git push
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- deployment/artifacts
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'Publish verified Telecom production artifacts'
+          git push origin HEAD:codex/data-analytics-evidence-2026-10-05

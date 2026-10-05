@@ -6,7 +6,7 @@ p=Path("README.md"); text=p.read_text(encoding="utf-8")
 fs=pd.read_csv("results/forecast_summary.csv"); am=pd.read_csv("results/anomaly_metrics.csv"); cs=pd.read_csv("results/capacity_summary.csv"); dq=json.loads(Path("results/data_quality.json").read_text())
 def r(x,n=3): return f"{float(x):.{n}f}"
 lg=fs[fs.model=="lightgbm_global"].set_index("horizon_h"); tcn=fs[fs.model=="temporal_cnn_global"].set_index("horizon_h") if (fs.model=="temporal_cnn_global").any() else None
-best=am[am.breakdown=="global"].sort_values("f1",ascending=False).iloc[0]
+best=am[(am.breakdown=="global")&(am.detector=="isolation_forest")].iloc[0]
 types=am[(am.detector==best.detector)&(am.breakdown=="type")][["group","precision","recall","f1","detection_delay_h"]]
 block=f"""<!-- AUTO_RESULTS_START -->
 ## Measured results
@@ -21,14 +21,16 @@ The measured run scanned **{dq['raw_rows_scanned']:,} original raw rows** across
 for _,x in fs.iterrows():
     block+=f"| {x.model} | {int(x.horizon_h)}h | {int(x.cells)} | {r(x.mae_mean)} | {r(x.rmse_mean)} | {r(x.smape_mean)}% | {r(x.mase_mean)} | {r(x.mae_improvement_vs_naive24_pct,2)}% |\n"
 block+=f"""
-On all 30 cells, LightGBM reduced MAE by **{lg.loc[1,'mae_improvement_vs_naive24_pct']:.2f}% at +1h** and **{lg.loc[24,'mae_improvement_vs_naive24_pct']:.2f}% at +24h** versus the 24-hour seasonal-naive baseline.
+On all 30 cells, LightGBM reduced MAE by **{lg.loc[1,'mae_improvement_vs_naive24_pct']:.2f}% at +1h** and **{lg.loc[24,'mae_improvement_vs_naive24_pct']:.2f}% at +24h** versus the 24-hour seasonal-naive baseline. Gains must be assessed separately by horizon; the +1h result does not establish a comparable +24h advantage. Paired time-block intervals and observation counts are in `evidence_report.json`.
 """
 if tcn is not None:
     block+=f"The Temporal CNN did **not** beat LightGBM: TCN MAE was {tcn.loc[1,'mae_mean']:.2f} at +1h and {tcn.loc[24,'mae_mean']:.2f} at +24h, versus LightGBM {lg.loc[1,'mae_mean']:.2f} and {lg.loc[24,'mae_mean']:.2f}.\n"
 block+=f"""
 ### Anomaly detection
 
-Best test detector: **{best.detector}** — event precision **{best.precision:.3f}**, recall **{best.recall:.3f}**, F1 **{best.f1:.3f}**, mean detected-event delay **{best.detection_delay_h:.2f} h**.
+Isolation Forest test detector: **{best.detector}** — event precision **{best.precision:.3f}**, recall **{best.recall:.3f}**, F1 **{best.f1:.3f}**, mean detected-event delay **{best.detection_delay_h:.2f} h**.
+
+Denominators: **{int(best.true_events)} injected true events**, **{int(best.tp_events)+int(best.fp_events)} predicted events**; **{int(best.tp_events)} TP / {int(best.fp_events)} FP / {int(best.fn_events)} FN**.
 
 {types.to_markdown(index=False)}
 
@@ -43,3 +45,4 @@ start="<!-- AUTO_RESULTS_START -->"; end="<!-- AUTO_RESULTS_END -->"
 text=text.split(start)[0]+block+text.split(end)[1]
 p.write_text(text,encoding="utf-8")
 print(block)
+

@@ -12,7 +12,10 @@ def inject_events(frame: pd.DataFrame, history: pd.DataFrame, config: dict, seed
     out=frame.copy(); out["injected_actual"]=out.actual.astype(float); out["event_id"]=""
     ac=config["anomaly"]; combos=[(t,m) for t in ac["types"] for m in ac["magnitudes_std"] for _ in range(ac["replicates_per_type_magnitude"])]
     rng=np.random.default_rng(seed); rng.shuffle(combos)
-    cells=np.array(sorted(out.cell_id.unique())); rng.shuffle(cells); chosen=cells[:len(combos)]
+    cells=np.array(sorted(out.cell_id.unique()))
+    if len(cells) < len(combos):
+        raise ValueError(f"Need {len(combos)} cells for one injected event per cell; got {len(cells)}")
+    rng.shuffle(cells); chosen=cells[:len(combos)]
     scale=history.groupby("cell_id").internet.std().to_dict(); events=[]
     for eid,(cid,(typ,mag)) in enumerate(zip(chosen,combos),1):
         sub=out[out.cell_id==cid].sort_values("target_time"); dur=DUR[typ]; start=int(rng.integers(4,len(sub)-dur-3)); idx=sub.index[start:start+dur]
@@ -97,3 +100,4 @@ def run_anomaly(config_path="config.yaml"):
 def main():
     ap=argparse.ArgumentParser(); ap.add_argument("--config",default="config.yaml"); a=ap.parse_args(); run_anomaly(a.config)
 if __name__=="__main__": main()
+
