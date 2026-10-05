@@ -1,0 +1,2 @@
+capacity_percentile,n_predictions,actual_breaches,predicted_breaches,tp,fp,fn,tn,precision,recall,f1
+0.95,8640,390,159,78,81,312,8169,0.49056603773584906,0.2,0.28415300546448086
