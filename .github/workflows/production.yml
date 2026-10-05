@@ -12,6 +12,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build dashboard serving image
         run: docker build -t telecom-production:ci .
+      - name: Render the real-data dashboard and select multiple cells
+        run: docker run --rm --entrypoint python telecom-production:ci scripts/check_dashboard.py
       - name: Verify missing real-data outputs block startup
         run: |
           python - <<'PY'
