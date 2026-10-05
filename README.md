@@ -108,3 +108,7 @@ Run `make all` to regenerate this section strictly from `results/*.csv`.
 - Real operator capacity counters and labeled incident/alarm streams.
 - Drift monitoring and periodic model retraining.
 
+
+## Production deployment
+
+Deployment configuration and launch requirements are documented in [docs/PRODUCTION.md](docs/PRODUCTION.md). The deployment has not yet been verified live.

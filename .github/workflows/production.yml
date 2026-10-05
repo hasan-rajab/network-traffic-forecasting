@@ -1,0 +1,23 @@
+name: Production image
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  container:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build dashboard serving image
+        run: docker build -t telecom-production:ci .
+      - name: Verify missing real-data outputs block startup
+        run: |
+          python - <<'PY'
+          import subprocess
+          result = subprocess.run(['docker', 'run', '--rm', 'telecom-production:ci'], capture_output=True, text=True, timeout=30)
+          assert result.returncode != 0
+          assert 'Missing generated artifacts' in result.stderr
+          print('Dashboard startup correctly refuses missing data artifacts.')
+          PY
