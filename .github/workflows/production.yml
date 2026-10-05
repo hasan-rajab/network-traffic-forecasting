@@ -16,7 +16,7 @@ jobs:
         run: |
           python - <<'PY'
           import subprocess
-          result = subprocess.run(['docker', 'run', '--rm', 'telecom-production:ci'], capture_output=True, text=True, timeout=30)
+          result = subprocess.run(['docker', 'run', '--rm', '-e', 'NETWORK_ARTIFACT_DIR=/missing', 'telecom-production:ci'], capture_output=True, text=True, timeout=30)
           assert result.returncode != 0
           assert 'Missing generated artifacts' in result.stderr
           print('Dashboard startup correctly refuses missing data artifacts.')

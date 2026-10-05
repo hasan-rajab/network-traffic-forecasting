@@ -2,6 +2,15 @@
 
 Status: deployment configuration prepared; no live deployment has been verified.
 
+The manual `bootstrap.yml` workflow now regenerates the full real-data pipeline,
+validates its forecast and anomaly denominators, and commits only the derived
+serving bundle on the deployment branch. It cannot publish to `main`. Run it
+on `codex/data-analytics-evidence-2026-10-05`; the Docker image then serves the
+validated files from `/app/deployment/artifacts`. The bundle records checksums,
+the source commit, workflow run and ODbL data attribution. Raw records and model
+binaries are excluded. This workflow does not assert historical CV percentages;
+use the regenerated evidence report for actual results.
+
 Deploy the `codex/data-analytics-evidence-2026-10-05` branch. Railway reads
 `railway.json`, builds the root Dockerfile and checks `/_stcore/health`.
 The image runs only the Streamlit serving dependencies. Training remains an
