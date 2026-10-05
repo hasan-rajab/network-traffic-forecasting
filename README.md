@@ -112,3 +112,12 @@ Run `make all` to regenerate this section strictly from `results/*.csv`.
 ## Production deployment
 
 Deployment configuration and launch requirements are documented in [docs/PRODUCTION.md](docs/PRODUCTION.md). The deployment has not yet been verified live.
+# Interactive public demo
+
+[Explore Telecom analytics](https://telecom-analytics-production.up.railway.app) ·
+[Portfolio](https://nexusmind-production-3da9.up.railway.app/portfolio)
+
+Choose a network cell and +1h/+24h forecast, filter traffic segments, inspect SQL, download aggregate
+data and adjust the hypothetical capacity threshold. The page distinguishes the 200M+ raw source
+scans from the 27,360 hourly modelling rows and shows injected-event denominators and uncertainty.
+Capacity thresholds are training-percentile proxies; scenarios do not establish real operator capacity.

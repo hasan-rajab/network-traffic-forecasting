@@ -28,7 +28,7 @@ def main() -> None:
         "SQL daily load, segmentation and coverage",
         "SQL cell trends — prior-only 24-hour history",
         "History",
-        "+24h rolling-origin forecast",
+        "+1h rolling-origin forecast",
         "Injected-anomaly evaluation view",
         "Capacity-proxy warnings",
     }
@@ -43,6 +43,17 @@ def main() -> None:
         assert trends["cell_id"].nunique() == 1
         assert int(trends["cell_id"].iloc[0]) == int(cell_options[index])
         tested_cells.append(cell_options[index])
+    app.radio[0].set_value(24).run(timeout=45)
+    assert not app.exception
+    assert "+24h rolling-origin forecast" in {section.value for section in app.subheader}
+    app.slider[0].set_value(0.5).run(timeout=45)
+    low_threshold_count = int(app.metric[0].value)
+    app.slider[0].set_value(1.5).run(timeout=45)
+    assert not app.exception
+    assert int(app.metric[0].value) <= low_threshold_count
+    app.multiselect[0].set_value([app.multiselect[0].options[0]]).run(timeout=45)
+    assert not app.exception
+    assert app.dataframe[2].value.traffic_band.nunique() == 1
     print(json.dumps({"dashboard_rendered": True, "exceptions": 0,
                       "selected_cells": len(cell_options), "tested_cells": tested_cells,
                       "sql_trends_follow_selection": True, "dataframes": len(app.dataframe)}))
